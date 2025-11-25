@@ -6,7 +6,7 @@ import styles from './DropdownMenu.module.css';
 type DropdownMenuProps = {
   id: string;
   children: ReactNode;
-  trigger: ReactNode;
+  trigger?: ReactNode;
   activeDropdownId: string | null;
   setActiveDropdownId: (id: string | null) => void;
 };
@@ -23,11 +23,12 @@ export const DropdownMenu = ({
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const [wasOpenBeforeHide, setWasOpenBeforeHide] = useState(false);
 
   const toggleMenu = () => {
     if (isOpen) setActiveDropdownId(null);
     else {
-      setCoords(null); // сброс — чтобы не мигало
+      setCoords(null);
       setActiveDropdownId(id);
     }
   };
@@ -45,15 +46,15 @@ export const DropdownMenu = ({
       viewportHeight - t.bottom >= m.height
         ? t.bottom
         : t.top >= m.height
-          ? t.top - m.height
-          : Math.max(0, viewportHeight - m.height);
+        ? t.top - m.height
+        : Math.max(0, viewportHeight - m.height);
 
     const left =
       viewportWidth - t.left >= m.width
         ? t.left
         : t.right >= m.width
-          ? t.right - m.width
-          : Math.max(0, viewportWidth - m.width);
+        ? t.right - m.width
+        : Math.max(0, viewportWidth - m.width);
 
     requestAnimationFrame(() => setCoords({ top, left }));
   };
@@ -108,6 +109,33 @@ export const DropdownMenu = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, setActiveDropdownId]);
 
+  useEffect(() => {
+    if (!triggerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+
+        if (entry.isIntersecting) {
+          if (wasOpenBeforeHide) {
+            setActiveDropdownId(id);
+            setWasOpenBeforeHide(false);
+          }
+        } else {
+          if (activeDropdownId === id) {
+            setWasOpenBeforeHide(true);
+            setActiveDropdownId(null);
+          }
+        }
+      },
+      { threshold: 0.01 }
+    );
+
+    observer.observe(triggerRef.current);
+
+    return () => observer.disconnect();
+  }, [activeDropdownId, id, setActiveDropdownId, wasOpenBeforeHide]);
+
   return (
     <div className={styles.container} ref={triggerRef}>
       <div onClick={toggleMenu} className={styles.trigger}>
@@ -128,7 +156,7 @@ export const DropdownMenu = ({
           >
             {children}
           </div>,
-          document.body,
+          document.body
         )}
     </div>
   );
