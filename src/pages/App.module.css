@@ -1,0 +1,26 @@
+.page {
+  min-height: 200vh;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 200px;
+  background-color: #fff;
+}
+
+.topRow {
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 40px;
+}
+
+.centerRow {
+  display: flex;
+  justify-content: center;
+}
+
+.bottomRow {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  margin-top: 400px;
+}
